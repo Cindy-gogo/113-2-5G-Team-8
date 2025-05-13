@@ -1,38 +1,34 @@
-
+% ===================== File: gNodeB.m =====================
 classdef gNodeB
     properties
         ID
-        Position
-        Carrier
-        PRSConfig
+        Position            % [x y]  (畫素座標)
+        CenterFreq          % Hz
+        SubcarrierSpacing   % kHz
+        Waveform            % row‑vector
+        Lwave               % 波形長度
     end
-
     methods
-        function obj = gNodeB(id, pos)
-            obj.ID = id;
-            obj.Position = pos;
+        function obj = gNodeB(id,pos,scs_kHz,fc)
+            if nargin<3, scs_kHz = 15;  end
+            if nargin<4, fc      = 3.5e9; end
 
-            obj.Carrier = nrCarrierConfig;
-            obj.Carrier.NSizeGrid = 52;
-            obj.Carrier.SubcarrierSpacing = 15;
+            obj.ID               = id;
+            obj.Position         = pos;
+            obj.SubcarrierSpacing= scs_kHz;
+            obj.CenterFreq       = fc;
 
-            prs = nrPRSConfig;
-            prs.PRSResourceSetPeriod = [1 0];
-            prs.NumRB = 52;
-            prs.RBOffset = 0;
-            prs.SymbolStart = 0;
-            prs.NumPRSSymbols = 6;
-            prs.NPRSID = id;
-
-            obj.PRSConfig = prs;
+            % --- 產生簡易 PRS 波形 (6 OFDM, 52 RB BPSK) ----------
+            Nsc = 12*52;                    % 子載波數
+            prsBits = randi([0 1],Nsc,1)*2-1;     % ±1
+            ofdmSym = ifft(prsBits,Nsc);          % 一個 symbol
+            tx = repmat(ofdmSym.',1,6);           % 6 symbols
+            obj.Waveform = tx(:).';               % row
+            obj.Lwave    = numel(obj.Waveform);
         end
 
-        function waveform = transmit(obj)
-            grid = nrResourceGrid(obj.Carrier, 1);
-            ind = nrPRSIndices(obj.Carrier, obj.PRSConfig);
-            sym = nrPRS(obj.Carrier, obj.PRSConfig);
-            grid(ind) = sym;
-            waveform = nrOFDMModulate(obj.Carrier, grid);
+        function w = transmit(obj)
+            w = obj.Waveform;
         end
     end
 end
