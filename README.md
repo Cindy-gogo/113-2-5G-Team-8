@@ -32,5 +32,24 @@ MATLAB UE 模擬器 ue_control_ui.m
 
 TDOA 解算器 locateByTDOA.m
 
+待完成
+MATLAB refresh_rx → Flask POST  :Cindy
+Flask /solve → 回傳 pos
+
+補上 locateByTDOA Numpy 版 + Error handling Paul
+
+誤差統計報告 SNR Sweep、多徑模型 (TDL‑C) Kevin
+
+
+
+
+Matlab part result
 
 ![image](https://github.com/user-attachments/assets/4a51caf2-86cb-47e7-b9e8-84fb02650065)
+
+
+![image](https://github.com/user-attachments/assets/c7594034-ca04-452b-9d60-a10222b3172d)
+
+
+![image](https://github.com/user-attachments/assets/ecd39edb-7c1b-47e1-8722-085ac739865e)
+
