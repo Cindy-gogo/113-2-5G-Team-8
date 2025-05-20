@@ -121,4 +121,43 @@ Matlab part result
 透過「到達時間差（TDOA, Time Difference of Arrival）」技術，使用至少三個基站（gNB）對 UE（使用者設備）進行平面（2D）定位，無需 UE 與基站間的時鐘同步。
 採用非線性最小平方（NLS, Nonlinear Least Squares）優化，定義目標函數 ![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
 
-##
+
+
+## locateByTOA.m
+用於 根據接收時間估算 UE 位置。試著找到一個位置，讓「從該點到各 gNB 的距離」與「實際量測到的距離」誤差總和最小
+1. 以所有基站的「平均位置」作為初始估測值
+   
+2. 建立殘差平方和函數
+   將 UE 與每個 gNB 的估計距離與實際量測距離之間的差值平方總和最小化
+
+3. 執行最小化
+
+4. 回傳估計位置
+
+## receiver_tools.m
+定義函數「detectTOA」，根據接收到的訊號，估算使用者設備（UE）與每個 gNodeB（基站）之間的到達時間（Time of Arrival, TOA）。
+模擬真實接收器在雜訊與多路徑干擾中，如何判斷訊號從每個基站到達的時間點。
+
+流程：
+1. 輸入參數
+   - rx：UE 接收到的複數訊號。
+   - gnbList：所有 gNodeB 物件的列表。
+   - fs：採樣頻率（Hz）。
+
+2. 對每個基站執行：
+   - 呼叫 gNodeB 的 transmit() 方法取得其發送的參考波形。
+   - 使用 xcorr() 進行「互相關分析」，比對接收到的訊號與每個基站的發送波形之間的對應程度。
+   - 找出最大相關值的位置，即代表最可能的到達時間點。
+   - 根據該位置，扣除波形長度後換算成時間（以秒為單位）作為 TOA 值。
+  
+3. 輸出結果
+   回傳一個 TOA 時間清單 toa_list，對應每一個基站的到達時間估計值。
+
+
+## scs_to_fs.m
+子載波間距轉換成取樣頻率，系統會根據應用需求設定不同的 子載波間距（SubCarrier Spacing, SCS），例如 15 kHz、30 kHz、60 kHz 等。這些設定會影響訊號的頻寬與採樣率，因此需要透過轉換公式計算對應的取樣頻率（Sampling Frequency, fs）。
+
+轉換原理：
+5G NR（New Radio）中，FFT 的基準點通常以 15 kHz 為一個單位，採樣頻率依據以下公式計算： ![image](https://github.com/user-attachments/assets/30508762-a008-4f69-b380-2480f9dedb9e)
+
+
