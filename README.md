@@ -110,3 +110,15 @@ Matlab part result
 
 4. 計算實際到達時間
    將最大點的位置 pk 減去參考波形長度，加入插值偏移 delta，再除以 fs，得到秒數為單位的 TOA。
+
+
+
+## gNodeB.m
+ 基地台（gNB），其主要功能為建立並傳送定位參考訊號（PRS）。
+
+
+## locateByTDOA.m
+透過「到達時間差（TDOA, Time Difference of Arrival）」技術，使用至少三個基站（gNB）對 UE（使用者設備）進行平面（2D）定位，無需 UE 與基站間的時鐘同步。
+採用非線性最小平方（NLS, Nonlinear Least Squares）優化，定義目標函數 ![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
+
+##
