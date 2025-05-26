@@ -62,30 +62,33 @@ Matlab part result
 
 
 
-## UE.m
-用來模擬使用者裝置（User Equipment, UE）接收訊號的模組。主要功能是模擬 UE 接收多個基站（gNB）訊號並加入雜訊，以真實反映 5G 無線傳輸環境。
-1. 屬性（Properties）：
-   - ID：裝置編號
-   - Position：UE 所在的空間座標（x, y）
-   - NumRx：接收天線數量（預設為 1 根）
+## UE.m — Simulated User Equipment (UE) Signal Reception Module
 
-2. 方法（Methods）：
-   - UE(id, pos, numRx)：建構子，用來初始化 UE 的位置與天線數量。
-   - receive(gnbList, fs, snr_dB)：主功能函數，模擬 UE 接收來自多個 gNB 的訊號。
+This module simulates the behavior of a 5G user equipment (UE) receiving signals from multiple gNBs (base stations). 
+It models realistic wireless transmission effects, including multipath propagation and additive noise, to emulate a real-world 5G positioning environment.
+
+1. Properties：
+   - **ID**：UE device identifier 
+   - **Position**：Spatial coordinates of the UE `[x, y]`
+   - **NumRx**：Number of receiving antennas (default: 1)  
 
 
-接收模擬流程：
-1. 屬性（Properties）：
-   算出每個基地台到 UE 的距離，根據距離和頻率，利用 Friis 模型估計訊號會被削弱多少（路徑損耗）。同時也會算出訊號傳過來會延遲多久，這些延遲會反映在波形中。
+2. Methods：
+   - UE(id, pos, numRx)：Initializes a UE object with a given ID, position, and number of antennas.
+   - receive(gnbList, fs, snr_dB)：the core function that simulates signal reception from multiple gNBs.
 
-2. 模擬真實通訊環境（使用 TDL-C 通道模型）
-   用 3GPP 推出的 TDL-C 模型，模擬真實世界傳輸環境下訊號會被建築物、牆壁等物體反射或擋住，形成多條路徑（多徑效應）
+Signal Reception Flow：
+Step 1. Distance and Delay Calculation
+For each gNB, the UE calculates the distance, estimates signal attenuation using the Friis transmission model, and applies a time delay to simulate real-world signal propagation.
+
+Step 2. Realistic Channel Modeling (TDL‑C)
+Applies the 3GPP TDL‑C model to simulate multipath fading caused by reflections and obstructions, creating a realistic wireless environment.
    
-3. 把所有基地台的波形組合起來
-   UE 把每個基地台傳來的波形記錄下來，根據天線數量儲存在一個三維矩陣 rxMat 裡。把所有訊號加總起來，形成一個總接收訊號 rxSum，可以拿來做定位或分析
+Step 3. Signal Aggregation (Combine the waveforms from all the base stations)
+Stores each gNB’s received waveform in a 3D matrix rxMat, and sums them into rxSum for positioning or further analysis.
 
-4. 加入雜訊模擬干擾
-   根據 SNR 設定來加入對應強度的高斯雜訊。
+Step 4. Additive Noise
+Gaussian noise is added based on the specified SNR (signal-to-noise ratio) to simulate interference.
 
 
 ## detectTOA.m
