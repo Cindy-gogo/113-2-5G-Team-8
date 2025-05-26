@@ -1,8 +1,0 @@
-
-Project Goal:
-Integrate the 5G PRS positioning algorithm developed in MATLAB into a GNS3-based 5G network topology via a RESTful location engine service. 
-The demonstration aims to showcase a “near-realistic” TOA/TDOA-based positioning flow.
-
-A miniature 5G network is built in GNS3 (3 gNBs + Open5GS Core). 
-PRS measurements are generated and analyzed in MATLAB, with TDOA data sent to a “Location Engine Server” (Flask). 
-The server returns the UE coordinates, which are displayed in real-time on a MATLAB GUI — forming a complete end-to-end 5G positioning demo.
