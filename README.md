@@ -92,37 +92,44 @@ Gaussian noise is added based on the specified SNR (signal-to-noise ratio) to si
 
 
 ## detectTOA.m
-負責估算訊號「到達時間（Time of Arrival, TOA）」的模組。本方法使用 互相關（cross-correlation）搭配拋物線插值，能有效精準判斷每一個 gNB 傳來的信號何時抵達 UE 接收端。
-把 UE 收到的訊號，和每個基地台（gNB）原本發送的訊號做比對。當兩者最相似時，就能推估這個訊號大約是幾秒前傳過來的。
-但因為資料是用一格一格的樣本收進來，沒辦法非常準確地知道訊號在哪一格進來的，再使用「數學補償」——拋物線插值——讓時間的估算更精準，從而提升整個系統定位效果。
+This module estimates the **Time of Arrival (TOA)** of signals received from multiple gNBs (base stations). 
+It uses **cross-correlation** combined with **parabolic interpolation** to accurately determine when each signal reaches the UE (User Equipment), even in the presence of noise and multipath effects.
 
-流程：
-1. 輸入接收波形與 gNB 清單
-   - rx：由 UE 收到的總波形（包含多個 gNB 干擾與雜訊）
-   - gnbList：gNB 發射源的物件清單
-   - fs：取樣頻率，用來將樣本點轉為秒
+Core Concept:
+The UE compares the received waveform (`rx`) with each gNB's known transmitted waveform. 
+The point of **maximum similarity** (highest cross-correlation) indicates when the signal most likely arrived.  
 
-2. 依序比對每顆 gNB 的發射波形
-   對每顆 gNB 執行以下步驟：
-   - 取得該 gNB 的「參考波形」（理論發射波形）
-   - 將接收到的總波形與參考波形進行 互相關運算，計算在不同延遲情況下的相似程度
-   - 找出 互相關最大值的位置，代表最有可能的到達點
+However, since sampling occurs in discrete time steps, the true arrival time may lie **between samples**. 
+Therefore, a **parabolic interpolation** is applied around the correlation peak to refine the TOA estimate with sub-sample precision, significantly improving overall positioning accuracy.
+
+
+Processing Flow：
+1.**Input**
+   - `rx`: Received waveform at the UE (may contain signals from multiple gNBs plus noise)
+   - `gnbList`: Array of gNB objects with known transmitted signals
+   - `fs`: Sampling frequency (Hz), used to convert samples into seconds
+
+2.**Per gNB Processing**
+   - Extract reference waveform from each gNB
+   - Perform **cross-correlation** between `rx` and the reference waveform
+   - Locate the **index of the correlation peak**, indicating the best time match
   
-3. 拋物線插值（Parabolic Interpolation）
-   由於互相關的最大值可能落在兩個取樣點之間，因此使用三點拋物線對最大值進行插值微調，提升估算精度。
+3. **Parabolic Interpolation**
+Apply parabolic interpolation around the peak using three points to estimate a more precise offset delta, refining TOA to sub-sample accuracy.
 
-4. 計算實際到達時間
-   將最大點的位置 pk 減去參考波形長度，加入插值偏移 delta，再除以 fs，得到秒數為單位的 TOA。
 
+4. **TOA Calculation**
+Compute TOA by subtracting the reference waveform length from the peak index pk, adding the interpolation offset delta, and dividing by the sampling rate fs to convert to seconds.
 
 
 ## gNodeB.m
-基地台（gNB），其主要功能為建立並傳送定位參考訊號（PRS）。
+This module defines a gNodeB class that simulates a 5G base station (gNB) transmitting Positioning Reference Signals (PRS) for UE localization.
 
 
 ## locateByTDOA.m
-透過「到達時間差（TDOA, Time Difference of Arrival）」技術，使用至少三個基站（gNB）對 UE（使用者設備）進行平面（2D）定位，無需 UE 與基站間的時鐘同步。
-採用非線性最小平方（NLS, Nonlinear Least Squares）優化，定義目標函數 ![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
+This function performs **2D localization** of a User Equipment (UE) using the **Time Difference of Arrival (TDOA)** technique. 
+It requires at least **three gNBs (base stations)** and does **not rely on clock synchronization** between the UE and gNBs.
+The function applies **Nonlinear Least Squares (NLS)** optimization with the following objective: ![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
 
 
 
