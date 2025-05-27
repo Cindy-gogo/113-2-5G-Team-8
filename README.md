@@ -135,39 +135,61 @@ The function applies **Nonlinear Least Squares (NLS)** optimization with the fol
 
 
 
-## locateByTOA.m
-用於 根據接收時間估算 UE 位置。試著找到一個位置，讓「從該點到各 gNB 的距離」與「實際量測到的距離」誤差總和最小
-1. 以所有基站的「平均位置」作為初始估測值
+## locateByTOA.m_ TOA-Based UE Position Estimation
+This function estimates the UE's position using **Time of Arrival (TOA)** measurements from multiple base stations (gNBs). 
+It finds the point in space that minimizes the total error between: the **estimated distances** (from UE to each gNB) and the **measured distances** (derived from TOA × speed of light)
+
+
+Process Overview:
+
+1. **Initial Guess**  
+   The algorithm starts by using the **average of all gNB positions** as the initial location estimate for the UE.
    
-2. 建立殘差平方和函數
-   將 UE 與每個 gNB 的估計距離與實際量測距離之間的差值平方總和最小化
+2. **Cost Function Construction** _ Builds a **sum of squared residuals** function that compares:
+   - Estimated distance from UE to each gNB  
+   - Measured distance from TOA × speed of light建立殘差平方和函數
 
-3. 執行最小化
+3. **Optimization**  
+   Uses `fminsearch` to minimize the residual function and find the best-fitting position.
 
-4. 回傳估計位置
+4.**Return Estimated Position**  
+   Outputs the estimated 2D coordinate `[x, y]` of the UE.
+   
 
 ## receiver_tools.m
-定義函數「detectTOA」，根據接收到的訊號，估算使用者設備（UE）與每個 gNodeB（基站）之間的到達時間（Time of Arrival, TOA）。
-模擬真實接收器在雜訊與多路徑干擾中，如何判斷訊號從每個基站到達的時間點。
+Defines the `detectTOA` function, which estimates the **Time of Arrival (TOA)** from each base station (`gNodeB`) to the User Equipment (UE) using the received signal. 
+This function simulates how a real receiver would detect signal arrival times under noise and multipath conditions.
 
-流程：
-1. 輸入參數
-   - rx：UE 接收到的複數訊號。
-   - gnbList：所有 gNodeB 物件的列表。
-   - fs：採樣頻率（Hz）。
+Processing Steps:
+1. **Inputs**
+   - `rx`: The complex received signal at the UE.
+   - `gnbList`: A list of `gNodeB` objects (each with known transmitted PRS).
+   - `fs`: Sampling frequency (Hz), used to convert sample indices to time.
 
-2. 對每個基站執行：
-   - 呼叫 gNodeB 的 transmit() 方法取得其發送的參考波形。
-   - 使用 xcorr() 進行「互相關分析」，比對接收到的訊號與每個基站的發送波形之間的對應程度。
-   - 找出最大相關值的位置，即代表最可能的到達時間點。
-   - 根據該位置，扣除波形長度後換算成時間（以秒為單位）作為 TOA 值。
+2.**Per gNodeB Estimation**
+   - For each gNB, call the `transmit()` method to obtain the reference PRS waveform.
+   - Perform **cross-correlation** (`xcorr`) between the received signal and the reference waveform.
+   - Locate the index of the **maximum correlation peak**, representing the most likely TOA point.
+   - Adjust the peak index by subtracting the waveform length, then convert the result to seconds using the sampling frequency.
   
-3. 輸出結果
-   回傳一個 TOA 時間清單 toa_list，對應每一個基站的到達時間估計值。
+3.**Output**
+Returns a `toa_list`, which contains the estimated TOA (in seconds) for each base station.
+
 
 
 ## scs_to_fs.m
-子載波間距轉換成取樣頻率，系統會根據應用需求設定不同的 子載波間距（SubCarrier Spacing, SCS），例如 15 kHz、30 kHz、60 kHz 等。這些設定會影響訊號的頻寬與採樣率，因此需要透過轉換公式計算對應的取樣頻率（Sampling Frequency, fs）。
+In 5G NR systems, the **Subcarrier Spacing (SCS)** is configurable depending on application needs — commonly set to **15 kHz**, **30 kHz**, or **60 kHz**. 
+
+Input
+scs_kHz: Subcarrier spacing in kHz (typical values include 15, 30, 60)
+
+Output
+fs: Corresponding sampling frequency in Hz, assuming 4096 FFT size by default
+
+Formula
+![image](https://github.com/user-attachments/assets/4cab5013-ad98-43e9-9218-219b64030fd3)
+
+
 
 轉換原理：
 5G NR（New Radio）中，FFT 的基準點通常以 15 kHz 為一個單位，採樣頻率依據以下公式計算： ![image](https://github.com/user-attachments/assets/30508762-a008-4f69-b380-2480f9dedb9e)
