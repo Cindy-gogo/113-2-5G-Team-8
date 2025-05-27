@@ -78,6 +78,7 @@ It models realistic wireless transmission effects, including multipath propagati
    - receive(gnbList, fs, snr_dB)：the core function that simulates signal reception from multiple gNBs.
 
 Signal Reception Flow：
+
 Step 1. Distance and Delay Calculation
 For each gNB, the UE calculates the distance, estimates signal attenuation using the Friis transmission model, and applies a time delay to simulate real-world signal propagation.
 
@@ -104,6 +105,7 @@ Therefore, a **parabolic interpolation** is applied around the correlation peak 
 
 
 Processing Flow：
+
 1.**Input**
    - `rx`: Received waveform at the UE (may contain signals from multiple gNBs plus noise)
    - `gnbList`: Array of gNB objects with known transmitted signals
@@ -129,7 +131,10 @@ This module defines a gNodeB class that simulates a 5G base station (gNB) transm
 ## locateByTDOA.m
 This function performs **2D localization** of a User Equipment (UE) using the **Time Difference of Arrival (TDOA)** technique. 
 It requires at least **three gNBs (base stations)** and does **not rely on clock synchronization** between the UE and gNBs.
-The function applies **Nonlinear Least Squares (NLS)** optimization with the following objective: ![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
+The function applies **Nonlinear Least Squares (NLS)** optimization with the following objective: <div align="center">
+  <img src="docs/img/tdoa_cost_function.png" alt="TDOA Cost Function" width="300"/>
+</div>
+![image](https://github.com/user-attachments/assets/caea8881-50e4-4b63-863f-fffa99102cef)
 
 
 
