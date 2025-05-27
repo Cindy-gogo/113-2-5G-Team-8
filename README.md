@@ -147,7 +147,7 @@ Process Overview:
    
 2. **Cost Function Construction** _ Builds a **sum of squared residuals** function that compares:
    - Estimated distance from UE to each gNB  
-   - Measured distance from TOA × speed of light建立殘差平方和函數
+   - Measured distance from TOA × speed of light
 
 3. **Optimization**  
    Uses `fminsearch` to minimize the residual function and find the best-fitting position.
@@ -189,80 +189,93 @@ fs: Corresponding sampling frequency in Hz, assuming 4096 FFT size by default
 Formula
 ![image](https://github.com/user-attachments/assets/4cab5013-ad98-43e9-9218-219b64030fd3)
 
+ **Conversion Principle**
+In 5G NR (New Radio), the FFT base is typically defined using **15 kHz** as the reference subcarrier spacing.  
+The **sampling frequency** `fs` is calculated using the following scaling formula:![image](https://github.com/user-attachments/assets/30508762-a008-4f69-b380-2480f9dedb9e)
 
-
-轉換原理：
-5G NR（New Radio）中，FFT 的基準點通常以 15 kHz 為一個單位，採樣頻率依據以下公式計算： ![image](https://github.com/user-attachments/assets/30508762-a008-4f69-b380-2480f9dedb9e)
 
 
 ## ue_control_ui.m
-負責建立一個互動式圖形使用者介面（GUI），用於模擬使用者設備（UE, User Equipment）在 5G 環境下的接收與定位行為。
+This script builds an interactive **Graphical User Interface (GUI)** for simulating UE (User Equipment) signal reception and positioning behavior in a 5G environment.
 
-流程：
-1.  初始化設定與主視窗建立
-   - 預設 UE 起始位置為 [100, 100]。
-   - 頻率選項為 2.5 GHz, 3.5 GHz, 4.0 GHz，子載波間距（SCS）支援 15/30/60 kHz。
-   - 根據 SCS 計算取樣頻率 fs（例如 SCS=15 → fs=15.36 MHz）。
-   - 建立主視窗與地圖區域，供使用者觀察並操作 UE 與 gNB（基站）位置。
 
-2. 控制面板功能
-   - SNR (dB)：模擬訊雜比，範圍 0~30。
-   - MIMO 數量：接收天線數量，可選擇 1、2 或 4。
-   - SCS 選擇：用戶可切換不同的子載波間距。
-   - 新增 / 刪除 gNB：即時添加或移除基站節點，動態改變通訊場域佈局。
+Workflow Overview：
+
+1.**Initialization & Main Window Setup**
+   - Default UE position is set to `[100, 100]`.
+   - Supports three carrier frequencies: **2.5 GHz**, **3.5 GHz**, and **4.0 GHz**.
+   - Subcarrier spacing (SCS) options: **15 / 30 / 60 kHz**.
+   - Sampling frequency `fs` is computed from SCS (e.g., SCS = 15 → fs = 15.36 MHz).
+   - GUI window and map panel are created for interactive UE/gNB control.
+
+
+2.**Control Panel Features**
+   - **SNR (dB):** Adjustable signal-to-noise ratio (range: 0–30 dB).
+   - **MIMO:** Select number of receiving antennas (1, 2, or 4).
+   - **SCS Selection:** Toggle between subcarrier spacings.
+   - **Add/Delete gNB:** Dynamically add or remove gNodeB base stations to change the simulation layout.
+
   
-3. UE操控與定位流程
-   - 使用者可透過滑鼠點擊地圖或鍵盤（上下左右）移動 UE。
-   - 每次 UE 位置變更後，系統會：
-     重建 UE 物件。
-     呼叫 UE.receive() 進行訊號接收模擬。
-     使用 detectTOA() 偵測接收時間（TOA）。
-     計算 TDOA（到達時間差），並傳入 locateByTDOA() 進行定位估算。
-     最後透過 viewer_update() 更新圖形顯示與預測結果。
+3.**UE Control & Localization Process**
+   - Users can move the UE by clicking on the map or using arrow keys.
+   - On every movement, the system:
 
-4. 實時視覺化更新
-即時顯示
-- UE 實際位置與預測位置。
-- 所有基站位置與其通訊連線。
-- 可透過不同頻段與參數模擬真實場景，觀察定位結果變化。
+     Reconstructs the UE object
+     Calls `UE.receive()` to simulate reception
+     Calls `detectTOA()` to estimate time of arrival (TOA)
+     Computes TDOA and calls `locateByTDOA()` for position estimation
+     Updates the GUI with `viewer_update()` for visual feedback
 
+4.**Real-Time Visualization**
+   - Displays actual vs estimated UE positions
+   - Shows all gNB locations and connections
+   - Allows multi-band and multi-parameter simulation to observe positioning accuracy under different conditions
 
 ## viewer_init.m
-Viewer 初始化，負責建立模擬系統中用戶設備（UE）所接收訊號的圖形化視覺介面，用於觀察與分析定位過程中的波形與交叉相關（xcorr）結果。
-提供即時的波形與定位資訊，幫助使用者理解定位系統中多基地台訊號的傳播與時間差異對位置估測的影響。
+Initializes the graphical interface used for visualizing PRS-based signal reception and localization within the 5G UE simulation system.
+Provides an interactive and informative visual panel to:
+Display received PRS signals at the UE,
+Show cross-correlation results from multiple gNBs,
+Track UE position estimation in real time
 
-初始化：
-1. 建立視窗與子圖
-   - 左上：接收波形（Real）
-   - 右上：gNB0 的交叉相關圖
-   - 左下：gNB1 的交叉相關圖
-   - 右下：gNB2 的交叉相關圖
 
-2. 儲存圖像物件供後續更新使用
-   透過 setappdata 指令，將圖像物件與視窗物件儲存在全域環境中，使其他模組能夠即時更新圖表。
+Initialization Workflow：
+1. Figure and Subplots
+   - Top-left: Received signal (Real part)
+   - Top-right: Cross-correlation with gNB 0
+   - Bottom-left: Cross-correlation with gNB 1
+   - Bottom-right: Cross-correlation with gNB 2
+
+2. Shared Object Storage
+Stores plot axes and line handles using setappdata()
+Enables real-time updates from other modules (e.g., viewer_update.m)
+
    
-3. 資訊面板顯示
-   - TOA（Time of Arrival）時間：各基地台訊號抵達 UE 的時間。
-   - 定位估計座標：模擬系統根據演算法計算出的 UE 預測位置。
+4. Information Panel
+   - Shows Time of Arrival (TOA) for each gN
+   - Displays estimated UE coordinates from localization algorithms
 
 
 ## viewer_update.m
-波形與定位結果即時更新模組，負責將使用者設備（UE）所接收的波形與定位分析結果「即時呈現在圖形介面」上，是視覺化介面（GUI）運作的核心更新模組。
+This function updates the visual interface in real time, displaying the UE’s received waveform and localization results. 
+It is the **core update routine** for the GUI visualization system and is triggered whenever the UE receives new signals or changes position.
 
-更新內容：
-1. 取得 GUI 控制物件
-   使用 getappdata() 從全域環境中取出圖表與標籤物件的控制權。
+Update Components：
+1. **Retrieve GUI Handles**
+   Uses `getappdata()` to access the graphical axes, plot lines, and text labels stored in the global environment during `viewer_init.m`.
 
-2. 更新接收波形圖（rx）
-   - 顯示實際接收到的複數波形訊號的實部（real part）。
-   - 用 plot() 將其即時繪製在圖形視窗中。
+2. **Update Received Waveform (rx)**
+   - Plots the **real part** of the complex received signal using `plot()`.
+   - Refreshes the waveform display in the upper-left subplot.
 
-3. 更新交叉相關圖（corr）
-   - 對每個基站的訊號互相關結果進行更新，顯示其強度與形狀，觀察峰值位置。
-   - 用於辨識訊號到達時間。
 
-4. 更新右側文字資訊
-   - 顯示每個基站的 TOA 數值（以秒為單位）。
-   - 顯示估算後的 UE 位置座標（通常為像素座標，或經轉換為公尺）。
+3.  **Update Cross-Correlation Results (corr)**
+   - For each gNB, updates the cross-correlation subplot to show correlation strength and peak timing.
+   - Helps visualize signal arrival timing used for TOA/TDOA detection.
+
+4. **Update Text Information**
+   - Displays the **TOA values** (in seconds) for each gNB.
+   - Displays the **estimated UE position** — either in pixel coordinates or transformed to meters depending on the system setup.
+
 
 
