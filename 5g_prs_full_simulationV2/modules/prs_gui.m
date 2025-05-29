@@ -4,13 +4,13 @@ function prs_gui()
     grid.RowHeight = {40, 40, '1x', 100};
     grid.ColumnWidth = {220, 220, 220, '1x'};
 
-    uilabel(grid, 'Text','步數'); steps = uieditfield(grid, 'numeric','Value',180);
+    uilabel(grid, 'Text','Step'); steps = uieditfield(grid, 'numeric','Value',180);
     uilabel(grid, 'Text','半徑（m）'); radius = uieditfield(grid, 'numeric','Value',30);
     uilabel(grid, 'Text','牆厚（cm）'); wallthick = uieditfield(grid, 'numeric','Value',20);
-    uilabel(grid, 'Text','場景'); scene = uidropdown(grid,'Items',{'空地','單牆','多房'},'Value','空地');
-    btnStart = uibutton(grid,'Text','開始模擬'); 
-    btnStop  = uibutton(grid,'Text','停止');
-    btnReset = uibutton(grid,'Text','重設');
+    uilabel(grid, 'Text','場景'); scene = uidropdown(grid,'Items',{'Outside','Singal wall','house'},'Value','Outside');
+    btnStart = uibutton(grid,'Text','Start'); 
+    btnStop  = uibutton(grid,'Text','Stop');
+    btnReset = uibutton(grid,'Text','Resert');
 
     ax = uiaxes(grid); ax.Layout.Row = [1 4]; ax.Layout.Column = 4;
     xlim(ax, [-60,60]); ylim(ax, [-60,60]); axis(ax,'equal'); hold(ax,'on');
@@ -76,8 +76,8 @@ function prs_gui()
         steps.Value = 180;
         radius.Value = 30;
         wallthick.Value = 20;
-        scene.Value = '空地';
-        infoText.Value = {'準備開始模擬...'};
+        scene.Value = 'Outside';
+        infoText.Value = {'Start simulation...'};
         cla(ax);
         gnb = 40 * [cosd(90), cosd(210), cosd(330); sind(90), sind(210), sind(330)]';
         gnb_plot = plot(ax, gnb(:,1), gnb(:,2), 'rs', 'MarkerSize', 10, 'Tag', 'GNB');

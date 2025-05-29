@@ -1,8 +1,8 @@
 function walls = drawScene(ax, scene, thick)
     walls = {};
-    if strcmp(scene, '單牆')
+    if strcmp(scene, 'Single wall')
         walls{end+1} = [-10 -30 -10 30];
-    elseif strcmp(scene, '多房')
+    elseif strcmp(scene, 'House')
         walls{end+1} = [-10 -30 -10 30];
         walls{end+1} = [10 -30 10 30];
         walls{end+1} = [-30 -10 30 -10];

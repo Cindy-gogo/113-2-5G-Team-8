@@ -69,7 +69,7 @@ function simulateTDOA(ax, gnb, steps, radius, thick_cm, scene, infoText, walls)
         % 顯示累加誤差與 lost 次數
         msg = {};
         for j = 1:length(freqs)
-            msg{end+1} = sprintf('%s - %.1f GHz 累加誤差: %.2f m, Lost: %d', ...
+            msg{end+1} = sprintf('%s - %.1f GHz Sum error: %.2f m, Lost: %d', ...
                 color_names{j}, freqs(j)/1e9, errs(j), lost_cnt(j));
         end
         infoText.Value = msg;
