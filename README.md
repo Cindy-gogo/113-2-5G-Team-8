@@ -60,8 +60,52 @@ Matlab part result
 
 ![image](https://github.com/user-attachments/assets/ecd39edb-7c1b-47e1-8722-085ac739865e)
 
+Version 2
+## estimatePosition.m
+
+Purpose:
+This function estimates the 2D position [x, y] of a User Equipment (UE) based on Time of Arrival (TOA)-derived distances to multiple gNodeBs (gNBs). 
+The goal is to minimize the total error between the measured distances and the calculated Euclidean distances from the UE to each gNB.
+
+Function Workflow：
+
+Step 1：Initial Guess
+x0 = mean(cell2mat(cellfun(@(g) g.Position, gnbList, 'UniformOutput', false)), 1);
+→ Uses the average position of all gNBs as the initial guess x0 for the UE position.
+
+Step 2：Cost Function Definition
+costFunction = @(x) sum((vecnorm(x - positions, 2, 2) - distances).^2);
+→ Defines an objective function that calculates the sum of squared differences between:
+Estimated distances from UE to each gNB (using Euclidean norm), and Measured distances (derived from TOA × speed of light)
+
+Step 3：Nonlinear Optimization
+estimatedPosition = fminsearch(costFunction, x0);
+→  Uses fminsearch to minimize the cost function and return the estimated position that best fits the measured data.
 
 
+## simulateTDOA.m
+This function computes the simulated Time Difference of Arrival (TDOA) between a UE and multiple gNBs. 
+It calculates the signal propagation time (TOA) from each gNB to the UE and returns the differences relative to a reference base station. 
+These TDOA values are typically used as ground truth for testing positioning algorithms such as locateByTDOA.
+ 
+
+Workflow：
+Step 1：Input Parameters
+        - uePos: Actual position of the UE [x, y]
+        - gnbList: List of base station objects (gNodeBs)
+        - c: Speed of light (used to convert distance to time)
+
+Step 2：Distance Computation
+
+
+
+To compute the TDOA values (i.e., time differences between signal arrivals from different gNBs) based on the UE's actual position and known positions of the gNBs. 
+These TDOA values are essential inputs for localization algorithms like locateByTDOA.
+
+
+
+
+Version 1
 ## UE.m — Simulated User Equipment (UE) Signal Reception Module
 
 This module simulates the behavior of a 5G user equipment (UE) receiving signals from multiple gNBs (base stations). 
