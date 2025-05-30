@@ -3,7 +3,7 @@ https://www.mathworks.com/help/5g/ug/nr-prs-positioning.html
 
 
 
-5G PRS + GNS3 定位系統
+5G PRS + GNS3 定位系統 (待修)
 
 專案目標：把 MATLAB 的 5G PRS 定位演算法，透過位置引擎 REST 服務，整合進 GNS3 所建的 5G 網路拓樸，展示「近真實」的 TOA/TDOA 定位流程。
 在 GNS3 搭建的小型 5G 網路（3 gNB + Open5GS Core）上，
