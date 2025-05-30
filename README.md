@@ -64,156 +64,175 @@ Version 2
 ## estimatePosition.m
 
 Purpose:
-This function estimates the 2D position [x, y] of a User Equipment (UE) based on Time of Arrival (TOA)-derived distances to multiple gNodeBs (gNBs). 
-The goal is to minimize the total error between the measured distances and the calculated Euclidean distances from the UE to each gNB.
+This function estimates the 2D position `[x, y]` of a User Equipment (UE) based on Time Difference of Arrival (TDOA) measurements relative to a reference gNB (gNB1).  
+The goal is to minimize the total error between observed TDOA values and the predicted TDOA values calculated from the estimated UE position.
+
 
 Function Workflow：
 
 Step 1：Initial Guess
-x0 = mean(cell2mat(cellfun(@(g) g.Position, gnbList, 'UniformOutput', false)), 1);
-→ Uses the average position of all gNBs as the initial guess x0 for the UE position.
+init = mean(gnb);
+→ Uses the geometric center (average position) of all gNBs as the initial guess for the UE position.
 
 Step 2：Cost Function Definition
-costFunction = @(x) sum((vecnorm(x - positions, 2, 2) - distances).^2);
-→ Defines an objective function that calculates the sum of squared differences between:
-Estimated distances from UE to each gNB (using Euclidean norm), and Measured distances (derived from TOA × speed of light)
+loss_fn = @(p) ...
+    ( ((norm(p - gnb(2,:)) - norm(p - ref_pos))/c - tdoa(2))^2 + ...
+      ((norm(p - gnb(3,:)) - norm(p - ref_pos))/c - tdoa(3))^2 );
+→ Defines an objective (loss) function that sums the squared differences between:
+Predicted TDOA (based on distance differences from the estimated UE position to each gNB, divided by speed of light), and Measured TDOA values.
 
 Step 3：Nonlinear Optimization
-estimatedPosition = fminsearch(costFunction, x0);
-→  Uses fminsearch to minimize the cost function and return the estimated position that best fits the measured data.
-
+[pos, ~] = fminsearch(loss_fn, init, options);
+→ Uses fminsearch (Nelder-Mead simplex algorithm) to minimize the loss function and return the estimated UE position that best fits the observed TDOA data.
 
 
 ## isPathBlocked.m
 
 Purpose：
-Determines whether the straight-line path between two positions (pos1 and pos2) is blocked by any walls defined in wallList.
+Determines how many walls block the straight-line path between two positions `p1` and `p2`.  
+It returns the total number of intersections (how many walls the path crosses).
+
+Parameters：
+- p1 → Start point of the path [x1, y1].
+- p2 → End point of the path [x2, y2].
+- walls → Cell array of wall segments.
+Each wall is represented as [x1 y1 x2 y2].
 
 Process：
 
-Step 1：Loop through each wall in the wallList.       
-Step 2：For each wall (defined by endpoints p1 and p2), check if it intersects with the line segment from pos1 to pos2.
-Step 3：Use geometric intersection logic (based on cross products) to detect whether the two line segments cross.
-Step 4：If any intersection is found, return true (i.e., the path is blocked).
-Step 5：If no intersections are found after checking all walls, return false (i.e., path is clear).
+Step 1: Initialize count = 0.
+Step 2: Loop through each wall in walls.
+Step 3: For each wall (represented by endpoints [x1 y1 x2 y2]), use segmentsIntersect() to check whether it intersects with the path segment p1 → p2.
+Step 4: If an intersection is detected, increment count.
+Step 5: After all walls are checked, return count.
+
 
 
 ## prs_gui.m
-serves as the main GUI launcher and coordinator for the 5G PRS + TDOA simulation system. 
-It initializes the scene, creates UE and gNB objects, simulates signal transmission and reception, and visualizes the results in real time.
+This GUI serves as the main launcher and coordinator for a **5G PRS + TDOA simulation system**.  
+It initializes the simulation scene, sets up gNB positions, defines wall obstacles, runs TDOA-based positioning, and visualizes the results in real time.
+
 
 Key Workflow：
 1. Initialization
-   - Set parameters: Configure initial settings such as:
-     Frequency (e.g., 2.5 GHz, 3.5 GHz), Subcarrier Spacing (SCS): 15 / 30 / 60 kHz, Signal-to-Noise Ratio (SNR), MIMO antenna count (1, 2, or 4)
-   - SLaunch GUI: Initialize the main user interface using ue_control_ui().
-   - Scene setup: Place gNBs and UE on the map using drawScene().
+   **Parameter Setup**:Configure initial parameters:
+  - Number of simulation steps
+  - UE movement radius
+  - Wall thickness
+  - Scene type: `Outside`, `Single wall`, or `House`
+
+   **Launch GUI**:  
+   Create the main interface using MATLAB `uifigure`.
+   
+   **Scene Setup**:  
+   Place gNBs (base stations) at predefined locations (equilateral triangle), Draw walls according to the selected scene using `drawScene()`.
 
 
-2. TDOA Positioning Pipeline (simulateTDOA())
-   (1) Signal Reception
-   Call UE.receive() to simulate the waveform received from multiple gNBs, including noise and multipath effects.
+2. TDOA Positioning Pipeline (simulateTDOA)
+   (1)**UE Signal Reception Simulation**  
+   Simulate UE location within a given radius and assume ideal signal reception (no explicit waveform processing).
 
-   (2) TOA Detection
-   Use detectTOA() to perform cross-correlation and estimate the Time of Arrival (TOA) of signals from each base station.
+   (2)**TDOA Calculation**  
+   Compute time differences between the distances to different gNBs, assuming constant speed of light.
 
-   (3) TDOA Calculation
-   Compute pairwise time differences between TOA values from gNBs.
+   (3)**Position Estimation**  
+   Estimate UE position by solving a nonlinear least squares (NLS) optimization problem using `estimatePosition()` based on TDOA measurements.
 
-   (4) Position Estimation
-   Pass TDOA data to locateByTDOA() which performs nonlinear least squares (NLS) optimization to estimate the UE’s 2D position.
+   (4)**Real-time Visualization**  
+   Continuously update the GUI:
+   - Display estimated UE position
+   - Draw gNB locations
+   - Show wall obstacles
+   - Update simulation status text
 
-   (5) Real-time Visualization
-   Use viewer_update() to display:Estimated UE position, Received waveform, Cross-correlation peaks, TOA values per gNB
 
 ## simulateTDOA.m
-This function computes the simulated Time Difference of Arrival (TDOA) between a UE and multiple gNBs. 
-It calculates the signal propagation time (TOA) from each gNB to the UE and returns the differences relative to a reference base station. 
-These TDOA values are typically used as ground truth for testing positioning algorithms such as locateByTDOA.
+This function implements the core **5G PRS + TDOA positioning simulation loop**.  
+It simulates a UE moving along a circular trajectory, calculates noisy TDOA measurements at each step, accounts for wall-induced delays, and estimates the UE position using nonlinear optimization.  
+Results are plotted in real time on the GUI axes.
  
 
 Workflow：
 Step 1：Input Parameters
-        - uePos: Actual position of the UE [x, y]
-        - gnbList: List of base station objects (gNodeBs)
-        - c: Speed of light (used to convert distance to time)
+        - ax：Axes object for visualization
+        - gnb：gNB positions (3 x 2 matrix)
+        - steps：Number of simulation steps (UE path points)
+        - radius：Radius of UE trajectory (meters)
+        - thick_cm：Wall thickness (centimeters)
+        - scene： Scene type: 'Outside', 'Single wall', 'House'
+        - infoText：Text area for showing simulation progress
+        - walls：Cell array of wall segments used for blocking/delay
 
-Step 2：Distance Computation
 
-Calculates the distance from the UE to each gNB.
-Converts each distance to Time of Arrival (TOA) by dividing by c.
+Step 2：UE Trajectory
+UE moves in a circular path of given radius.
 
-Step 3：TDOA Computation
+Step 3：Frequency Setup
+Simulation runs for 5 frequencies:700 MHz, 1.8 GHz, 2.6 GHz, 3.5 GHz, 28 GHz
+Each frequency uses a different plot color.
 
-Selects one gNB as the reference (usually the first).
-Computes TDOA for all other gNBs as the difference in TOA relative to the reference gNB.
+Step 4：Main Simulation Loop (Per Step)
+For each UE position:
+(1)True TDOA Calculation
+- Compute true distances from UE to each gNB.
+- Convert to TOA → compute TDOA relative to reference gNB.
 
-Step 4：Output
+(2)Wall Delay Modeling
+For each gNB, check if the path crosses walls
 
-Returns a vector of TDOA values relative to the reference gNB.
+(3)Noise Injection
+- Add Gaussian noise to TDOA values.
+- Noise level depends on frequency.
+
+(4)Position Estimation
+- Call estimatePosition(gnb, tdoa) to estimate current UE position.
+- Check estimation validity (distance threshold).
+
+(5)Visualization
+- Plot true UE position.
+- Plot estimated positions (different color per frequency).
+- Update info text with cumulative error and lost count.
+
+
+Step 5：Real-time Visualization
+Axes show:
+- gNB positions (red squares)
+- True UE path (black circle)
+- Estimated positions (colored dots per frequency)
+Info text displays:
+- Cumulative positioning error
+- Number of failed (lost) estimations
+
+
 
 
 ## drawScene.m
-This function is responsible for drawing the 5G positioning simulation environment in a graphical user interface (GUI). 
-It visually displays the spatial layout of all gNBs (base stations), the User Equipment (UE), and optional obstacles (e.g., buildings), forming the visual foundation for the simulation process.
+`drawScene(ax, scene, thick)`  
+Draws walls in the specified axes `ax` according to the selected `scene`.
 
+Parameters：
+- ax：Axes handle where the scene will be drawn.
+- scene：Name of the scene to draw.
+  Currently supported 'Single wall' : A single vertical wall. 'House' : Four walls forming a rectangular house.
+- thick：Line thickness parameter. The actual line width will be thick / 10.
 
-Inputs：
-- ax: Axis handle where the scene will be drawn.
-- gNB_positions: An array of [x, y] coordinates for all gNBs.
-- ue_position: Initial [x, y] position of the User Equipment.
-- obstacles (optional): A list of rectangular areas representing signal-blocking structures.
+Return Value：
+- walls ➜ A cell array containing wall coordinates.
+Each wall is defined as [x1 y1 x2 y2].
 
-Key Features：
-1. Clear previous plots
-Clears the target axes using cla(ax).
-
-2. Plot all gNBs
-Draws all gNBs in 3D using red square markers.
-Adds index labels (e.g., 1, 2, 3...) near each gNB.
-
-3. Plot the UE
-Draws the UE using a green circle marker at its current position.
-
-4. Set titles and axis labels
-Adds a plot title and labels for X, Y, Z axes.
-Includes a legend to distinguish gNBs and UE.
-
-5. Set axis scaling and view angle
-Makes the axis scale equal for realistic spatial proportions.
-Sets a 3D viewing angle (view(45, 25)).
 
 ## PRS_TDOA_SIMULATOR_MAIN.m
-This script simulates 5G positioning using PRS and TDOA, covering environment setup, signal reception, time detection, and final location estimation.
+This script serves as the **main entry point** to launch the 5G PRS + TDOA Simulator.  
+It sets up the environment and starts the GUI application.
 
-Core Workflow：
-1. Parameter Setup ：cfg = struct(...);
-Initial simulation parameters such as carrier frequency, SCS (subcarrier spacing), number of gNBs, UE SNR, and MIMO layers are defined here.
+Workflow：
+Step 1: Add Module Paths
+Step 2: Launch GUI
+Starts the interactive GUI (prs_gui.m):
+- Allows users to configure simulation parameters.
+- Visualizes positioning results in real time.
+- Provides interactive control (Start / Stop / Reset).
 
-
-2.  GUI Initialization： fig = figure(...); ax = axes(...);
-Creates the figure and axes for 3D scene visualization.
-
-3.  Object Initialization ： gNBs = creategNBs(cfg, ax); UE = createUE(cfg, ax);
-Deploys base stations (gNBs) and User Equipment (UE) using configured positions.
-   
-4.  Scene Drawing：drawScene： (rx = UE.receive(cfg, gNBs);
-Calls the visualization function to display all gNBs and the UE on the 3D plot.
-
-5.  Signal Reception：drawScene(gNBs, UE, fig, ax);
-Simulates the UE receiving PRS signals from multiple gNBs, including path loss and channel effects.
-
-6. TOA Detection ： toa = detectTOA(cfg, rx);
-Estimates the Time of Arrival (TOA) of each signal at the UE.
-
-7. TDOA Computation ：tdoa = computeTDOA(toa);
-Converts absolute TOA values into relative TDOA measurements.
-
-8. Position Estimation ：estPos = locateByTDOA(cfg, gNBs, tdoa);
-Estimates the UE's 3D position based on TDOA using multilateration or least squares.
-
-9. Result Display ： scatter3(...); text(...);
-Plots the estimated position and prints the location error for evaluation.
 
 
 Version 1
