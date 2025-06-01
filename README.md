@@ -62,9 +62,13 @@ Each wall is represented as [x1 y1 x2 y2].
 Process：
 
 Step 1: Initialize count = 0.
+
 Step 2: Loop through each wall in walls.
+
 Step 3: For each wall (represented by endpoints [x1 y1 x2 y2]), use segmentsIntersect() to check whether it intersects with the path segment p1 → p2.
+
 Step 4: If an intersection is detected, increment count.
+
 Step 5: After all walls are checked, return count.
 
 
