@@ -1,9 +1,29 @@
 # 5G
 https://www.mathworks.com/help/5g/ug/nr-prs-positioning.html
 
+## Version 2
+
+This project simulates 5G network scenarios to implement Positioning Reference Signal (PRS) and evaluate which frequency band is most suitable for PRS-based positioning.
+The frequency selection is based on currently deployed 5G bands in Taiwan, including Band N78 (3.3–3.8 GHz) and Band N79 (4.4–5.0 GHz), and also references international allocations such as EU (Band N78), USA (C-band, 3.7–3.98 GHz), and Japan (around 4.5 GHz).
+Through simulation and analysis, this project aims to provide insights into the optimal frequency bands for 5G PRS deployment.
+
+##Simulation-Outside
+![image](https://github.com/user-attachments/assets/e24da469-6023-40af-8aa3-bb8a58ab75b2)
 
 
-5G PRS + GNS3 定位系統 (待修)
+##Simulation-Single Wall
+![image](https://github.com/user-attachments/assets/6a6a9069-ed37-40e8-a8c3-c0be13e0e4ba)
+
+
+##Simulation-House
+![image](https://github.com/user-attachments/assets/220412e6-212e-4c88-8b8c-94d9aebfe706)
+
+
+
+
+## Version 1
+
+5G PRS + GNS3 定位系統 
 
 專案目標：把 MATLAB 的 5G PRS 定位演算法，透過位置引擎 REST 服務，整合進 GNS3 所建的 5G 網路拓樸，展示「近真實」的 TOA/TDOA 定位流程。
 在 GNS3 搭建的小型 5G 網路（3 gNB + Open5GS Core）上，
