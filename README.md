@@ -75,6 +75,7 @@ It initializes the simulation scene, sets up gNB positions, defines wall obstacl
 
 
 Key Workflow：
+
 1. Initialization
    **Parameter Setup**:Configure initial parameters:
   - Number of simulation steps
@@ -115,6 +116,7 @@ Results are plotted in real time on the GUI axes.
  
 
 Workflow：
+
 Step 1：Input Parameters
         - ax：Axes object for visualization
         - gnb：gNB positions (3 x 2 matrix)
