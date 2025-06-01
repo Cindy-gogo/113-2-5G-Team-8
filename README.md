@@ -141,6 +141,7 @@ Each frequency uses a different plot color.
 
 Step 4：Main Simulation Loop (Per Step)
 For each UE position:
+
      (1)True TDOA Calculation
         - Compute true distances from UE to each gNB.
         - Convert to TOA → compute TDOA relative to reference gNB.
@@ -195,7 +196,9 @@ It sets up the environment and starts the GUI application.
 
 Workflow：
 Step 1: Add Module Paths
+
 Step 2: Launch GUI
+
 Starts the interactive GUI (prs_gui.m):
 - Allows users to configure simulation parameters.
 - Visualizes positioning results in real time.
