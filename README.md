@@ -137,36 +137,35 @@ Each frequency uses a different plot color.
 
 Step 4：Main Simulation Loop (Per Step)
 For each UE position:
+     (1)True TDOA Calculation
+        - Compute true distances from UE to each gNB.
+        - Convert to TOA → compute TDOA relative to reference gNB.
 
-(1)True TDOA Calculation
-- Compute true distances from UE to each gNB.
-- Convert to TOA → compute TDOA relative to reference gNB.
+     (2)Wall Delay Modeling
+          For each gNB, check if the path crosses walls
 
-(2)Wall Delay Modeling
-For each gNB, check if the path crosses walls
+     (3)Noise Injection
+        - Add Gaussian noise to TDOA values.
+        - Noise level depends on frequency.
 
-(3)Noise Injection
-- Add Gaussian noise to TDOA values.
-- Noise level depends on frequency.
+     (4)Position Estimation
+        - Call estimatePosition(gnb, tdoa) to estimate current UE position.
+        - Check estimation validity (distance threshold).
 
-(4)Position Estimation
-- Call estimatePosition(gnb, tdoa) to estimate current UE position.
-- Check estimation validity (distance threshold).
-
-(5)Visualization
-- Plot true UE position.
-- Plot estimated positions (different color per frequency).
-- Update info text with cumulative error and lost count.
+     (5)Visualization
+        - Plot true UE position.
+        - Plot estimated positions (different color per frequency).
+        - Update info text with cumulative error and lost count.
 
 
 Step 5：Real-time Visualization
 Axes show:
-- gNB positions (red squares)
-- True UE path (black circle)
-- Estimated positions (colored dots per frequency)
+    - gNB positions (red squares)
+    - True UE path (black circle)
+    - Estimated positions (colored dots per frequency)
 Info text displays:
-- Cumulative positioning error
-- Number of failed (lost) estimations
+    - Cumulative positioning error
+    - Number of failed (lost) estimations
 
 
 
